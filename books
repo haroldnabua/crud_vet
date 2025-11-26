@@ -1,74 +1,124 @@
 INDEX
 
-<?php include "connect.php"; ?>
-
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Book System</title>
+    <title>Book Management</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+        .form-box {
+            width: 350px;
+            border: 1px solid black;
+            padding: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button {
+            width: 80px;
+            margin: 5px;
+        }
+        table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 700px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 5px;
+        }
+        .prompt-box {
+            margin-top: 10px;
+            padding: 10px;
+            width: 300px;
+            border: 1px dashed gray;
+        }
+    </style>
 </head>
+
 <body>
 
 <h2>BOOK MANAGEMENT SYSTEM</h2>
 
+<!-- FORM -->
+<div class="form-box">
 <form action="action.php" method="POST">
 
-    ISBN #: <input type="text" name="ISBN"><br><br>
-    Title: <input type="text" name="Title"><br><br>
-    Copyright: <input type="text" name="Copyright"><br><br>
-    Edition: <input type="text" name="Edition"><br><br>
-    Price: <input type="text" name="Price"><br><br>
-    Quantity: <input type="text" name="Quantity"><br><br>
+    <label>ISBN #:</label>
+    <input type="text" name="ISBN" value="<?= $_GET['ISBN'] ?? "" ?>">
+
+    <label>Title:</label>
+    <input type="text" name="Title" value="<?= $_GET['Title'] ?? "" ?>">
+
+    <label>Copyright:</label>
+    <input type="text" name="Copyright" value="<?= $_GET['Copyright'] ?? "" ?>">
+
+    <label>Edition:</label>
+    <input type="text" name="Edition" value="<?= $_GET['Edition'] ?? "" ?>">
+
+    <label>Price:</label>
+    <input type="text" name="Price" value="<?= $_GET['Price'] ?? "" ?>">
+
+    <label>Quantity:</label>
+    <input type="text" name="Quantity" value="<?= $_GET['Quantity'] ?? "" ?>">
+
+    <br>
 
     <button name="search">SEARCH</button>
     <button name="add">ADD</button>
     <button name="edit">EDIT</button>
     <button name="delete">DELETE</button>
-
 </form>
+</div>
 
-<p><b><?= $_GET['prompt'] ?? "" ?></b></p>
+<!-- PROMPT BOX -->
+<div class="prompt-box">
+    <b><?= $_GET['prompt'] ?? "" ?></b>
+</div>
 
 <hr>
+<table>
+    <tr>
+        <th>ISBN</th>
+        <th>Title</th>
+        <th>Copyright</th>
+        <th>Edition</th>
+        <th>Price</th>
+        <th>Quantity</th>
+        <th>TOTAL</th>
+    </tr>
 
-<?php 
-$books = mysqli_query($conn, "SELECT * FROM books");
-$grand = 0;
-?>
+    <?php 
+    include "connect.php";
+    $books = mysqli_query($conn, "SELECT * FROM books");
+    $grand = 0;
 
-<table border="1" cellpadding="5" cellspacing="0">
-<tr>
-    <th>ISBN</th>
-    <th>Title</th>
-    <th>Copyright</th>
-    <th>Edition</th>
-    <th>Price</th>
-    <th>Qty</th>
-    <th>Total</th>
-</tr>
+    while($row = mysqli_fetch_array($books)) :
+        $total = $row['Price'] * $row['Quantity'];
+        $grand += $total;
+    ?>
 
-<?php while($row = mysqli_fetch_array($books)) : 
-    $total = $row['Price'] * $row['Quantity'];
-    $grand += $total;
-?>
-<tr>
-    <td><?= $row['ISBN'] ?></td>
-    <td><?= $row['Title'] ?></td>
-    <td><?= $row['Copyright'] ?></td>
-    <td><?= $row['Edition'] ?></td>
-    <td><?= $row['Price'] ?></td>
-    <td><?= $row['Quantity'] ?></td>
-    <td><?= $total ?></td>
-</tr>
-<?php endwhile; ?>
+    <tr>
+        <td><?= $row['ISBN'] ?></td>
+        <td><?= $row['Title'] ?></td>
+        <td><?= $row['Copyright'] ?></td>
+        <td><?= $row['Edition'] ?></td>
+        <td><?= $row['Price'] ?></td>
+        <td><?= $row['Quantity'] ?></td>
+        <td><?= $total ?></td>
+    </tr>
 
+    <?php endwhile; ?>
 </table>
 
-<p><b>GRAND TOTAL: <?= $grand ?></b></p>
+<h3>GRAND TOTAL: <?= $grand ?></h3>
 
 </body>
 </html>
-
 
 
 ACTION
