@@ -1,0 +1,172 @@
+INDEX
+
+<?php include "connect.php"; ?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book System</title>
+</head>
+<body>
+
+<h2>BOOK MANAGEMENT SYSTEM</h2>
+
+<form action="action.php" method="POST">
+
+    ISBN #: <input type="text" name="ISBN"><br><br>
+    Title: <input type="text" name="Title"><br><br>
+    Copyright: <input type="text" name="Copyright"><br><br>
+    Edition: <input type="text" name="Edition"><br><br>
+    Price: <input type="text" name="Price"><br><br>
+    Quantity: <input type="text" name="Quantity"><br><br>
+
+    <button name="search">SEARCH</button>
+    <button name="add">ADD</button>
+    <button name="edit">EDIT</button>
+    <button name="delete">DELETE</button>
+
+</form>
+
+<p><b><?= $_GET['prompt'] ?? "" ?></b></p>
+
+<hr>
+
+<?php 
+$books = mysqli_query($conn, "SELECT * FROM books");
+$grand = 0;
+?>
+
+<table border="1" cellpadding="5" cellspacing="0">
+<tr>
+    <th>ISBN</th>
+    <th>Title</th>
+    <th>Copyright</th>
+    <th>Edition</th>
+    <th>Price</th>
+    <th>Qty</th>
+    <th>Total</th>
+</tr>
+
+<?php while($row = mysqli_fetch_array($books)) : 
+    $total = $row['Price'] * $row['Quantity'];
+    $grand += $total;
+?>
+<tr>
+    <td><?= $row['ISBN'] ?></td>
+    <td><?= $row['Title'] ?></td>
+    <td><?= $row['Copyright'] ?></td>
+    <td><?= $row['Edition'] ?></td>
+    <td><?= $row['Price'] ?></td>
+    <td><?= $row['Quantity'] ?></td>
+    <td><?= $total ?></td>
+</tr>
+<?php endwhile; ?>
+
+</table>
+
+<p><b>GRAND TOTAL: <?= $grand ?></b></p>
+
+</body>
+</html>
+
+
+
+ACTION
+<?php
+include "connect.php";
+
+$ISBN     = $_POST['ISBN'] ?? "";
+$Title    = $_POST['Title'] ?? "";
+$Copy     = $_POST['Copyright'] ?? "";
+$Edition  = $_POST['Edition'] ?? "";
+$Price    = $_POST['Price'] ?? "";
+$Qty      = $_POST['Quantity'] ?? "";
+
+$prompt = "";
+
+// SEARCH
+if (isset($_POST['search'])) {
+
+    if ($ISBN == "") {
+        $prompt = "ISBN MUST BE SUPPLIED";
+    } else {
+        $sql = "SELECT * FROM books WHERE ISBN = '$ISBN'";
+        $result = mysqli_query($conn, $sql);
+
+        if (mysqli_num_rows($result) == 0) {
+            $prompt = "ITEM NOT FOUND";
+        } else {
+            $row = mysqli_fetch_array($result);
+
+            // redirect and prefill fields
+            $params = http_build_query([
+                'ISBN' => $row['ISBN'],
+                'Title' => $row['Title'],
+                'Copyright' => $row['Copyright'],
+                'Edition' => $row['Edition'],
+                'Price' => $row['Price'],
+                'Quantity' => $row['Quantity'],
+                'prompt' => "ITEM IS FOUND"
+            ]);
+            header("Location: index.php?$params");
+            exit;
+        }
+    }
+}
+
+if (isset($_POST['add'])) {
+
+    if ($ISBN == "") {
+        $prompt = "NO RECORD TO ADD";
+    } else {
+        $check = mysqli_query($conn, "SELECT * FROM books WHERE ISBN = '$ISBN'");
+        if (mysqli_num_rows($check) > 0) {
+            $prompt = "RECORD ALREADY EXISTS";
+        } else {
+            $sql = "INSERT INTO books VALUES ('$ISBN','$Title','$Copy','$Edition','$Price','$Qty')";
+            mysqli_query($conn, $sql);
+            $prompt = "RECORD SUCCESSFULLY SAVED";
+        }
+    }
+}
+if (isset($_POST['edit'])) {
+
+    if ($ISBN == "") {
+        $prompt = "NO RECORD TO EDIT";
+    } else {
+        $check = mysqli_query($conn, "SELECT * FROM books WHERE ISBN='$ISBN'");
+        if (mysqli_num_rows($check) == 0) {
+            $prompt = "ISBN NOT FOUND";
+        } else {
+            $sql = "UPDATE books SET 
+                Title='$Title',
+                Copyright='$Copy',
+                Edition='$Edition',
+                Price='$Price',
+                Quantity='$Qty'
+                WHERE ISBN='$ISBN'";
+            mysqli_query($conn, $sql);
+            $prompt = "RECORD SUCCESSFULLY UPDATED";
+        }
+    }
+}
+
+if (isset($_POST['delete'])) {
+
+    if ($ISBN == "") {
+        $prompt = "NO RECORD TO DELETE";
+    } else {
+        $check = mysqli_query($conn, "SELECT * FROM books WHERE ISBN='$ISBN'");
+        if (mysqli_num_rows($check) == 0) {
+            $prompt = "ISBN NOT FOUND";
+        } else {
+            mysqli_query($conn, "DELETE FROM books WHERE ISBN='$ISBN'");
+            $prompt = "RECORD SUCCESSFULLY DELETED";
+        }
+    }
+}
+
+header("Location: index.php?prompt=$prompt");
+exit;
+
+
